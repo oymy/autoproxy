@@ -28,22 +28,103 @@
  */
 let fastFindBrowser =
 {
-  fastFind: {
+  //copied from
+  //http://codereview.adblockplus.org/5938722247802880/#ps5693417237512192
+  finder:
+  {
+    _resultListeners: [],
     searchString: null,
+    caseSensitive: false,
+    lastResult: null,
+
+    _notifyResultListeners: function(result, findBackwards)
+    {
+      this.lastResult = result;
+      for each (let listener in this._resultListeners)
+        listener.onFindResult(result, findBackwards);
+    },
+
+    fastFind: function(searchString, linksOnly, drawOutline)
+    {
+      this.searchString = searchString;
+      let result = treeView.find(this.searchString, 0,
+					false,
+                                        this.caseSensitive);
+      this._notifyResultListeners(result, false);
+    },
+
+    findAgain: function(findBackwards, linksOnly, drawOutline)
+    {
+      let result = treeView.find(this.searchString,
+					findBackwards ? -1 : 1,
+				        false,
+                                        this.caseSensitive);
+      this._notifyResultListeners(result, findBackwards);
+    },
+
+    addResultListener: function(listener)
+    {
+      if (this._resultListeners.indexOf(listener) === -1)
+        this._resultListeners.push(listener);
+    },
+
+    removeResultListener: function(listener)
+    {
+      let index = this._resultListeners.indexOf(listener);
+      if (index !== -1)
+        this._resultListeners.splice(index, 1);
+    },
+
+    // Irrelevant for us
+    highlight: function(highlight, word) {},
+    enableSelection: function() {},
+    removeSelection: function() {},
+    focusContent: function() {},
+    keyPress: function() {}
+  },
+
+  get _lastSearchString()
+  {
+    return this.finder.searchString;
+  },
+
+  fastFind: {
+    get searchString()
+    {
+      return fastFindBrowser.finder.searchString;
+    },
+
+    set searchString(searchString)
+    {
+      fastFindBrowser.finder.searchString = searchString;
+    },
+
     foundLink: null,
     foundEditable: null,
-    caseSensitive: false,
+
+    get caseSensitive()
+    {
+      return fastFindBrowser.finder.caseSensitive;
+    },
+
+    set caseSensitive(caseSensitive)
+    {
+      fastFindBrowser.finder.caseSensitive = caseSensitive;
+    },
+
+
     get currentWindow() { return fastFindBrowser.contentWindow; },
 
     find: function(searchString, linksOnly)
     {
-      this.searchString = searchString;
-      return treeView.find(this.searchString, 0, false, this.caseSensitive);
+      fastFindBrowser.finder.fastFind(searchString, linksOnly);
+      return fastFindBrowser.finder.lastResult;
     },
 
     findAgain: function(findBackwards, linksOnly)
     {
-      return treeView.find(this.searchString, findBackwards ? -1 : 1, false, this.caseSensitive);
+      fastFindBrowser.finder.findAgain(findBackwards, linksOnly);
+      return fastFindBrowser.finder.lastResult;
     },
 
     // Irrelevant for us

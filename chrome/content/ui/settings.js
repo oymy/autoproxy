@@ -1497,47 +1497,77 @@ let treeView = {
   {
     col = col.id;
 
-    if (col in this.atoms)
-      properties.AppendElement(this.atoms[col]);
+    if (typeof properties === "undefined"){
+      return this.atoms[col];
+    }
+    else
+    {
+      if (col in this.atoms)
+        properties.AppendElement(this.atoms[col]);
+    }
   },
 
   getRowProperties: function(row, properties)
   {
     let [subscription, filter] = this.getRowInfo(row);
     if (!subscription)
+    {
+      if (typeof properties === "undefined")
+      {
+	return "";
+      }
       return;
+    }
 
-    properties.AppendElement(this.atoms["selected-" + this.selection.isSelected(row)]);
-    properties.AppendElement(this.atoms["subscription-" + !filter]);
-    properties.AppendElement(this.atoms["filter-" + (filter instanceof aup.Filter)]);
-    properties.AppendElement(this.atoms["filter-regexp-" + (filter instanceof aup.RegExpFilter && !filter.shortcut)]);
-    properties.AppendElement(this.atoms["description-" + (typeof filter == "string")]);
-    properties.AppendElement(this.atoms["subscription-special-" + (subscription instanceof aup.SpecialSubscription)]);
-    properties.AppendElement(this.atoms["subscription-external-" + (subscription instanceof aup.ExternalSubscription)]);
-    properties.AppendElement(this.atoms["subscription-autoDownload-" + (subscription instanceof aup.DownloadableSubscription && subscription.autoDownload)]);
-    properties.AppendElement(this.atoms["subscription-disabled-" + subscription.disabled]);
-    properties.AppendElement(this.atoms["subscription-upgradeRequired-" + (subscription instanceof aup.DownloadableSubscription && subscription.upgradeRequired)]);
-    properties.AppendElement(this.atoms["subscription-dummy-" + (subscription instanceof aup.Subscription && subscription.url == "~dummy~")]);
+    let array = [];
+    array.push(this.atoms["selected-" + this.selection.isSelected(row)]);
+    array.push(this.atoms["subscription-" + !filter]);
+    array.push(this.atoms["filter-" + (filter instanceof aup.Filter)]);
+    array.push(this.atoms["filter-regexp-" + (filter instanceof aup.RegExpFilter && !filter.shortcut)]);
+    array.push(this.atoms["description-" + (typeof filter == "string")]);
+    array.push(this.atoms["subscription-special-" + (subscription instanceof aup.SpecialSubscription)]);
+    array.push(this.atoms["subscription-external-" + (subscription instanceof aup.ExternalSubscription)]);
+    array.push(this.atoms["subscription-autoDownload-" + (subscription instanceof aup.DownloadableSubscription && subscription.autoDownload)]);
+    array.push(this.atoms["subscription-disabled-" + subscription.disabled]);
+    array.push(this.atoms["subscription-upgradeRequired-" + (subscription instanceof aup.DownloadableSubscription && subscription.upgradeRequired)]);
+    array.push(this.atoms["subscription-dummy-" + (subscription instanceof aup.Subscription && subscription.url == "~dummy~")]);
     if (filter instanceof aup.Filter)
     {
       if (filter instanceof aup.ActiveFilter)
-        properties.AppendElement(this.atoms["filter-disabled-" + filter.disabled]);
+        array.push(this.atoms["filter-disabled-" + filter.disabled]);
 
       if (filter instanceof aup.CommentFilter)
-        properties.AppendElement(this.atoms["type-comment"]);
+        array.push(this.atoms["type-comment"]);
       else if (filter instanceof aup.BlockingFilter)
-        properties.AppendElement(this.atoms["type-filterlist"]);
+        array.push(this.atoms["type-filterlist"]);
       else if (filter instanceof aup.WhitelistFilter)
-        properties.AppendElement(this.atoms["type-whitelist"]);
+        array.push(this.atoms["type-whitelist"]);
       else if (filter instanceof aup.InvalidFilter)
-        properties.AppendElement(this.atoms["type-invalid"]);
+        array.push(this.atoms["type-invalid"]);
+    }
+
+    if (typeof properties === "undefined"){
+      return array.join(" ");
+    }
+    else
+    {
+      for(var i = 0; i<array.length; i++){
+	properties.AppendElement(array[i]);
+      }
     }
   },
 
   getCellProperties: function(row, col, properties)
   {
-    this.getColumnProperties(col, properties);
-    this.getRowProperties(row, properties);
+    if (typeof(properties) == "undefined"){
+      return this.getColumnProperties(col, properties)
+             + " " + this.getRowProperties(row, properties);
+    }
+    else
+    {
+      this.getColumnProperties(col, properties);
+      this.getRowProperties(row, properties);
+    }
   },
 
   isContainer: function(row)

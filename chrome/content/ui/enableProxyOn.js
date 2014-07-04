@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Wang Congming <lovelywcm@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2010-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -23,63 +23,28 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-// Matchers for disabled filters
-var disabledBlacklistMatcher = new aup.Matcher();
-var disabledWhitelistMatcher = new aup.Matcher();
-
-/**
- * Updates matchers for disabled filters (global disabledBlacklistMatcher and
- * disabledWhitelistMatcher variables), called on each filter change.
- */
-function reloadDisabledFilters(action, filter, additionalData)
-{
-  disabledBlacklistMatcher.clear();
-  disabledWhitelistMatcher.clear();
-
-  for each (let subscription in filterStorage.subscriptions)
-  {
-    if (subscription.disabled)
-      continue;
-
-    for each (let filter in subscription.filters)
-      if (filter instanceof aup.RegExpFilter && filter.disabled)
-        (filter instanceof aup.BlockingFilter ? disabledBlacklistMatcher : disabledWhitelistMatcher).add(filter);
-  }
-}
-reloadDisabledFilters();
-filterStorage.addFilterObserver(reloadDisabledFilters);
-filterStorage.addSubscriptionObserver(reloadDisabledFilters);
-
-
 /**
  * Used for creating "Enable Proxy On --" menu items.
  * Shared by context menu of statusbar, toolbar & sidebar.
  *
  * @param menuItem  document.getElementById
- * @param data  {RequestEntry} see requests.js
  */
-function enableProxyOn(menuItem, data)
+function enableProxyOn(flagItem, location)
 {
-  // global, intended
-  curItem = menuItem;
+  var curItem = flagItem;
+  location = location || aupHooks.getBrowser().currentURI;
 
   // remove previously created items
-  while (curItem.previousSibling && curItem.previousSibling.className == 'enableProxyOn')
-    curItem.parentNode.removeChild(curItem.previousSibling);
+  removeAllMenuItems(flagItem, 'enableProxyOn');
 
-  if (!data) return;
-
-  var location = aup.makeURL(data.location);
-  if (!proxy.isProxyableScheme(location)) return;
+  if (prefs.proxyMode!='auto' || !proxy.isProxyableScheme(location)) return;
 
   // create "enable proxy on site" menu items
-  makeSiteCheckbox(location, '||');
+  makeSiteCheckbox('||');
 
-  var filter =
-    aup.whitelistMatcher.matchesAny(data.location, data.typeDescr, data.docDomain, data.thirdParty) ||
-    aup.blacklistMatcher.matchesAny(data.location, data.typeDescr, data.docDomain, data.thirdParty) ||
-    disabledBlacklistMatcher.matchesAny(data.location, data.typeDescr, data.docDomain, data.thirdParty) ||
-    disabledWhitelistMatcher.matchesAny(data.location, data.typeDescr, data.docDomain, data.thirdParty);
+  var filter = aup.whitelistMatcher.matchesAny(location.spec, "DOCUMENT", "browser", false);
+  if (filter == null)
+    filter = aup.blacklistMatcher.matchesAny(location.spec, "DOCUMENT", "browser", false);
 
   // create "enable proxy on url" menu item
   if (filter && filter instanceof aup.BlockingFilter && filter.text.indexOf('||') != 0)
@@ -90,66 +55,67 @@ function enableProxyOn(menuItem, data)
     makeNewCheckbox(filter, 'disableProxyOnUrl');
 
   // create "disable proxy on site" menu items
-  makeSiteCheckbox(location, '@@||');
+  makeSiteCheckbox('@@||');
 
-  // create a menuseparator
-  while (curItem.className == 'enableProxyOn') curItem = curItem.nextSibling;
-  curItem.parentNode.insertBefore(cE('menuseparator'), curItem);
-  curItem.previousSibling.className = 'enableProxyOn';
-}
+  // create a menu separator
+  flagItem.parentNode.insertBefore(cE('menuseparator'), flagItem);
+  flagItem.previousSibling.className = 'enableProxyOn';
 
 
-/**
- * @param location  {nsIURI}
- * @param prefix  {string} "||" or "@@||"
- */
-function makeSiteCheckbox(location, prefix)
-{
-  var hostFilter = function() { return aup.Filter.fromText(prefix + host); }
+  /**
+   * @param prefix {string} "||" or "@@||"
+   */
+  function makeSiteCheckbox(prefix)
+  {
+    // avoid: .www..xxx.com
+    var host = location.host.replace(/^\.+/, '').replace(/\.{2,}/, '.');
 
-  // avoid: .www..xxx.com
-  var host = location.host.replace(/^\.+/, '').replace(/\.{2,}/, '.');
+    // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com' is active.
+    if (!isActive(hostFilter())) host = host.replace(/^www\./, '');
 
-  // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com' is active.
-  if (!isActive(hostFilter())) host = host.replace(/^www\./, '');
+    while (true) {
+      makeNewCheckbox(hostFilter(), prefix == '||' ? 'enableProxyOnSite' : 'disableProxyOnSite');
 
-  while (true) {
-    makeNewCheckbox(hostFilter(), prefix == '||' ? 'enableProxyOnSite' : 'disableProxyOnSite');
+      // strip sub domain
+      host = host.replace(/^[^\.]+\./, '');
+      // com
+      if (host.indexOf('.') <= 0) break;
+      // com.cn
+      if (/^(?:com|net|org|edu|gov)\.[a-z]{2}$/i.test(host) && !isActive(hostFilter())) break;
+    }
 
-    // strip sub domain
-    host = host.replace(/^[^\.]+\./, '');
-    // com
-    if (host.indexOf('.') <= 0) break;
-    // com.cn
-    if (/^(?:com|net|org|edu|gov)\.[a-z]{2}$/i.test(host) && !isActive(hostFilter())) break;
-  }
-}
-
-
-function makeNewCheckbox(filter, labeltempl)
-{
-  if (filter instanceof aup.WhitelistFilter && !isActive(filter)) return;
-
-  var filterText = filter.text.replace(/^@@/, '').replace(/^\|+/, '');
-  var checkbox = cE('menuitem');
-  checkbox.className = 'enableProxyOn';
-  checkbox.setAttribute('type', 'checkbox');
-  checkbox.setAttribute('label', aup.getString(labeltempl).replace(/--/, filterText));
-  checkbox.addEventListener('command', function() { toggleFilter(filter); }, false);
-  curItem.parentNode.insertBefore(checkbox, curItem);
-
-  if (isActive(filter)) {
-    checkbox.setAttribute('checked', true);
-    checkbox.style.color = filter instanceof aup.BlockingFilter ? 'green' : 'red';
-    if (labeltempl != 'enableProxyOnUrl') {
-      for (; curItem.className == 'enableProxyOn'; curItem = curItem.nextSibling) {
-        curItem.setAttribute('disabled', true);
-        curItem.style.color = '';
-      }
+    function hostFilter()
+    {
+      return aup.Filter.fromText(prefix + host);
     }
   }
 
-  curItem = checkbox;
+
+  function makeNewCheckbox(filter, labeltempl)
+  {
+    if (filter instanceof aup.WhitelistFilter && !isActive(filter)) return;
+
+    var filterText = filter.text.replace(/^@@/, '').replace(/^\|+/, '');
+    var checkbox = cE('menuitem');
+    checkbox.className = 'enableProxyOn';
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.setAttribute('label', aup.getString(labeltempl).replace(/--/, filterText));
+    checkbox.addEventListener('command', function() { toggleFilter(filter); }, false);
+    curItem.parentNode.insertBefore(checkbox, curItem);
+
+    if (isActive(filter) || labeltempl=='enableProxyOnSite' && suffixed(filter).some(isActive)) {
+      checkbox.setAttribute('checked', true);
+      checkbox.style.color = filter instanceof aup.BlockingFilter ? 'green' : 'red';
+      if (labeltempl != 'enableProxyOnUrl') {
+        while (curItem.className == 'enableProxyOn') {
+          curItem.setAttribute('disabled', true);
+          curItem.style.color = '';
+          curItem = curItem.nextSibling;
+        }
+      }
+    }
+    curItem = checkbox;
+  }
 }
 
 
@@ -158,16 +124,25 @@ function makeNewCheckbox(filter, labeltempl)
  */
 function toggleFilter(filter)
 {
-  if (filter.subscriptions.length) {
-    if (filter.disabled || filter.subscriptions.some(function(subscription) !(subscription instanceof aup.SpecialSubscription))) {
-      filter.disabled = !filter.disabled;
-      filterStorage.triggerFilterObservers(filter.disabled ? "disable" : "enable", [filter]);
-    }
-    else
+  var siteFilters = [filter];
+  if (filter.text.indexOf("||") == 0)
+    siteFilters = siteFilters.concat(suffixed(filter));
+
+  if (siteFilters.some(isActive)) {
+    siteFilters.forEach(function(filter) {
+      filter.disabled = true;
+      filterStorage.triggerFilterObservers("disable", [filter]);
       filterStorage.removeFilter(filter);
+    });
   }
-  else
-    filterStorage.addFilter(filter);
+  else {
+    if (filter.subscriptions.every(function(subscription) subscription.disabled))
+      filterStorage.addFilter(filter);
+    if (filter.disabled) {
+      filter.disabled = false;
+      filterStorage.triggerFilterObservers("enable", [filter]);
+    }
+  }
 
   filterStorage.saveToDisk();
 
@@ -181,8 +156,28 @@ function toggleFilter(filter)
  */
 function isActive(/**Filter*/ filter)
 {
-  return filter.subscriptions.length && !filter.disabled;
+  return !filter.disabled && filter.subscriptions.some(function(s) !s.disabled);
 }
 
 
-// TODO: reuse code for top window
+/**
+ * ||example.com => ||example.com^, ||example.com/
+ *
+ * @return {Array} of Filter
+ */
+function suffixed(/**Filter*/ filter)
+{
+  return [filter.text + "^", filter.text + "/"].map(aup.Filter.fromText);
+}
+
+
+function removeAllMenuItems(lastItem, className)
+{
+  while (lastItem.previousSibling) {
+    lastItem.previousSibling.className == className ?
+      lastItem.parentNode.removeChild(lastItem.previousSibling) :
+      lastItem = lastItem.previousSibling;
+  }
+}
+
+// @TODO: reuse code for top window

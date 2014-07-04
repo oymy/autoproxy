@@ -37,6 +37,7 @@ let eventHandlers = [
   ["aup-status-popup", "popupshowing", aupFillPopup],
   ["aup-toolbar-popup", "popupshowing", aupFillPopup],
   ["aup-command-settings", "command", function() { aup.openSettingsDialog(); }],
+  ["aup-command-report", "command", report2gfwList],
   ["aup-command-sidebar", "command", toggleSidebar],
   ["aup-command-contextmenu", "command", function(e) {
     if (e.eventPhase == e.AT_TARGET) E("aup-status-popup").openPopupAtScreen(window.screen.width/2, window.screen.height/2, false); }],
@@ -146,7 +147,6 @@ function aupInit() {
   filterStorage.addSubscriptionObserver(aupReloadPrefs);
 
   let browser = aupHooks.getBrowser();
-  browser.addEventListener("click", handleLinkClick, true);
 
   let dummy = function() {};
   let progressListener = {
@@ -210,8 +210,6 @@ function aupUnload()
   prefs.removeListener(aupReloadPrefs);
   prefs.removeListener(proxy.reloadPrefs);
   filterStorage.removeFilterObserver(aupReloadPrefs);
-  filterStorage.removeFilterObserver(reloadDisabledFilters);
-  filterStorage.removeSubscriptionObserver(reloadDisabledFilters);
   filterStorage.removeSubscriptionObserver(aupReloadPrefs);
   aupHooks.getBrowser().removeProgressListener(progressListener);
 }
@@ -271,42 +269,6 @@ function aupReloadPrefs() {
   updateElement(aupGetPaletteButton());
 }
 
-/**
- * Tests whether image manager context menu entry should be hidden with user's current preferences.
- * @return Boolean
- */
-function shouldHideImageManager()
-{
-  if (typeof arguments.callee._result != "undefined")
-    return arguments.callee._result;
-
-  let result = false;
-  if (prefs.hideimagemanager && "@mozilla.org/permissionmanager;1" in Cc)
-  {
-    try
-    {
-      result = true;
-      let enumerator = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager).enumerator;
-      while (enumerator.hasMoreElements())
-      {
-        let item = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-        if (item.type == "image" && item.capability == Ci.nsIPermissionManager.DENY_ACTION)
-        {
-          result = false;
-          break;
-        }
-      }
-    }
-    catch(e)
-    {
-      result = false;
-    }
-  }
-
-  arguments.callee._result = result;
-  return result;
-}
-
 function aupConfigureKey(key, value) {
   var valid = {
     accel: "accel",
@@ -345,51 +307,6 @@ function aupConfigureKey(key, value) {
     element.setAttribute("modifiers", modifiers.join(","));
 
     E("aup-keyset").appendChild(element);
-  }
-}
-
-/**
- * Handles browser clicks to intercept clicks on aup: links.
- */
-function handleLinkClick(/**Event*/ event)
-{
-  // Ignore right-clicks
-  if (event.button == 2)
-    return;
-
-  let link = event.target;
-  while (link && !(link instanceof Ci.nsIDOMNSHTMLAnchorElement))
-    link = link.parentNode;
-
-  if (link && /^aup:\/*subscribe\/*\?(.*)/i.test(link.href)) /* */
-  {
-    event.preventDefault();
-    event.stopPropagation();
-
-    let unescape = Cc["@mozilla.org/intl/texttosuburi;1"].getService(Ci.nsITextToSubURI);
-
-    let params = RegExp.$1.split('&');
-    let title = null;
-    let url = null;
-    for each (let param in params)
-    {
-      let parts = param.split("=", 2);
-      if (parts.length == 2 && parts[0] == 'title')
-        title = decodeURIComponent(parts[1]);
-      if (parts.length == 2 && parts[0] == 'location')
-        url = decodeURIComponent(parts[1]);
-    }
-
-    if (url && /\S/.test(url))
-    {
-      if (!title || !/\S/.test(title))
-        title = url;
-
-      var subscription = {url: url, title: title, disabled: false, external: false, autoDownload: true};
-
-      window.openDialog("chrome://autoproxy/content/ui/subscription.xul", "_blank",
-                         "chrome,centerscreen,modal", subscription);
-    }
   }
 }
 
@@ -466,8 +383,7 @@ function aupFillTooltip(event) {
   proxyDescr.hidden = E("aup-tooltip-proxy-label").hidden = (state == "disabled");
 
   var activeFilters = [];
-  E("aup-tooltip-blocked-label").hidden = (state != "auto");
-  E("aup-tooltip-blocked").hidden = (state != "auto");
+  E("aup-tooltip-blocked").hidden = E("aup-tooltip-blocked-label").hidden = (state!="auto");
   if (state == "auto") {
     var locations = [];
     var rootData = RequestList.getDataForWindow(window);
@@ -558,7 +474,7 @@ function aupFillPopup(event)
   let popup = event.target;
 
   // Not at-target call, ignore
-  if (popup.getAttribute("id").indexOf("options") >= 0)
+  if (popup.id != "aup-status-popup" && popup.id != "aup-toolbar-popup")
     return;
 
   // Need to do it this way to prevent a Gecko bug from striking
@@ -568,38 +484,37 @@ function aupFillPopup(event)
     if (list[i].id && /\-(\w+)$/.test(list[i].id))
       elements[RegExp.$1] = list[i];
 
+  // fix for default proxy, it is "menu" but not "menuitem"
+  elements['defaultProxy'] = popup.getElementsByTagName('menu')[0];
 
-  //
-  // Fill "Preference" & "Sidebar" Menu Items
-  //
+  // Fill "Report to gfwList" Menu Items
+  function isGfwlistSubscribed()
+  {
+    for (var subscriptionUrl in filterStorage.knownSubscriptions)
+      if (subscriptionUrl.indexOf("gfwlist.txt") > 0)
+        return true;
+    return false;
+  }
+  elements.report.hidden = !isGfwlistSubscribed();
+
+
+  // Fill "Sidebar" Menu Items
   var sidebarOpen = aupIsSidebarOpen();
   elements.opensidebar.hidden = sidebarOpen;
   elements.closesidebar.hidden = !sidebarOpen;
 
-
-  //
-  // Fill "Default Proxy" Menu Items
-  //
-  var menu = popup.getElementsByTagName('menu')[0];
-  while (menu.previousSibling.tagName != 'menuseparator')
-    menu.parentNode.removeChild(menu.previousSibling);
-
-  var popup = proxy.validConfigs.length > 3 ? menu.firstChild : null;
-  makeProxyItems(popup, menu);
-
-  menu.hidden = !popup;
-
-
-  //
   // Fill "Enable Proxy On" Menu Items
-  //
-  var rootData = RequestList.getDataForWindow(window).getURLInfo(aupHooks.getBrowser().currentURI.spec);
-  enableProxyOn(elements.modeauto, rootData);
+  enableProxyOn(elements.defaultProxy);
 
+  // Fill "Default Proxy" Menu Items
+  elements.defaultProxy.disabled = 'disabled' == prefs.proxyMode;
+  elements.defaultProxy.label = aup.getString('default_proxy') + ": " + proxy.nameOfDefaultProxy;
+  makeProxyItems(elements.defaultProxy.firstChild);
 
-  //
+  // Fill "choose proxy for rule groups" Menu Items
+  chooseProxy4RuleGroups(elements.modeauto);
+
   // Fill "Proxy Mode" Menu Items
-  //
   elements.modeauto.setAttribute("checked", "auto" == prefs.proxyMode);
   elements.modeglobal.setAttribute("checked", "global" == prefs.proxyMode);
   elements.modedisabled.setAttribute("checked", "disabled" == prefs.proxyMode);
@@ -650,10 +565,8 @@ function aupTogglePref(pref) {
 // Handle clicks on statusbar/toolbar panel
 function aupClickHandler(e)
 {
-  if (e.button == 1) {
-    prefs.proxyMode = proxy.mode[ (proxy.mode.indexOf(prefs.proxyMode)+1) % 3 ];
-    prefs.save();
-  }
+  if (e.button == 1) cycleProxyMode();
+
   // e.button is undefined when left click on tool bar icon
   else if (e.button != 2 && e.target.tagName != 'menuitem')
     aupExecuteAction(e.target.tagName == 'image' ? prefs.defaultstatusbaraction : prefs.defaulttoolbaraction, e);
@@ -672,26 +585,26 @@ function aupExecuteAction(action, e)
     case 2:
       aup.openSettingsDialog();
       break;
-    case 3: //quick add
+    case 3:
+      cycleProxyMode();
       break;
-    case 4: //cycle default proxy
+    case 4: // cycle default proxy
       if (aup.proxyTipTimer) aup.proxyTipTimer.cancel();
       prefs.defaultProxy = ++prefs.defaultProxy % proxy.server.length;
-      if (prefs.defaultProxy == 0) prefs.defaultProxy = 1;
       prefs.save();
-      //show tooltip
-      let tooltip = E("showCurrentProxy");
-      let tooltipLabel = E("showCurrentProxyValue");
-      tooltipLabel.value = proxy.nameOfDefaultProxy;
+      // show tooltip
+      let tooltip = E("cycleDefaultProxy");
+      tooltip.label = aup.getString('default_proxy') + ": " + proxy.nameOfDefaultProxy;
       if (e.screenX && e.screenY)
         tooltip.openPopupAtScreen(e.screenX, e.screenY, false);
       else
         tooltip.openPopupAtScreen(e.target.boxObject.screenX, e.target.boxObject.screenY, false);
       aup.proxyTipTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-      aup.proxyTipTimer.initWithCallback( {notify:function(){tooltip.hidePopup();}}, 2000, Components.interfaces.nsITimer.TYPE_ONE_SHOT );
+      aup.proxyTipTimer.initWithCallback(
+        {notify: function(){tooltip.hidePopup()}}, 2000, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
       break;
-    case 5: //default proxy menu
-      let popup = E("aup-popup-switchProxy");
+    case 5: // default proxy menu
+      let popup = E("aup-popup-defaultProxyList");
       makeProxyItems(popup);
       if (e.screenX && e.screenY) popup.openPopupAtScreen(e.screenX, e.screenY, false);
       else popup.openPopupAtScreen(e.target.boxObject.screenX, e.target.boxObject.screenY, false);
@@ -710,10 +623,9 @@ function switchDefaultProxy(event)
   }
 }
 
-function makeProxyItems(popup, menu)
+function makeProxyItems(popup)
 {
-  if (popup)
-    while (popup.firstChild) popup.removeChild(popup.firstChild);
+  while (popup.firstChild) popup.removeChild(popup.firstChild);
 
   for each (let p in proxy.getName) {
     let item = cE('menuitem');
@@ -723,18 +635,101 @@ function makeProxyItems(popup, menu)
     item.setAttribute('name', 'radioGroup-switchProxy');
     item.addEventListener("command", switchDefaultProxy, false);
     if (proxy.nameOfDefaultProxy == p) item.setAttribute('checked', true);
-    if (popup)
-      popup.appendChild(item);
-    else
-      menu.parentNode.insertBefore(item, menu);
+    popup.appendChild(item);
+  }
+}
+
+function report2gfwList()
+{
+  aup.loadInBrowser("https://gfwlist.autoproxy.org/report/?url=" + aupHooks.getBrowser().currentURI.spec);
+}
+
+function chooseProxy4RuleGroups(flagItem)
+{
+  // remove previously created items
+  removeAllMenuItems(flagItem, 'chooseProxy4RuleGroups');
+
+  // one menu per rule group
+  for each (var subscription in filterStorage.knownSubscriptions) {
+    createRuleGroupProxyPopup(subscription);
   }
 
-  // use 'direct connect' as default proxy is confusing, so hide it
-  if (popup)
-    popup.firstChild.hidden = true;
-  else {
-    while (menu.previousSibling.tagName != 'menuseparator')
-      menu = menu.previousSibling;
-    menu.hidden = true;
+  // if user has no rule group, insert a note
+  if (flagItem.previousSibling.className != 'chooseProxy4RuleGroups') {
+    var note = cE('menu');
+    note.className = 'chooseProxy4RuleGroups';
+    note.setAttribute('disabled', true);
+    note.setAttribute('label', aup.getString('no_proxy_rule'));
+    flagItem.parentNode.insertBefore(note, flagItem);
   }
+
+  // "when not matching" menu
+  createRuleGroupProxyPopup();
+
+  // create a menuseparator
+  flagItem.parentNode.insertBefore(cE('menuseparator'), flagItem);
+  flagItem.previousSibling.className = 'chooseProxy4RuleGroups';
+
+
+  function createRuleGroupProxyPopup(subscription)
+  {
+    var groupMenu = cE('menu'),
+        groupPopup = cE('menupopup'),
+        menuLabel, selectedProxy;
+
+    if (subscription) {
+      selectedProxy = subscription.proxy == -1 ? aup.getString('default_proxy') : proxy.getName[subscription.proxy];
+      menuLabel = (subscription.title || subscription.typeDesc) + ": " + selectedProxy;
+    }
+    else {
+      selectedProxy = prefs.fallbackProxy == -1 ? aup.getString('no_proxy') : proxy.getName[prefs.fallbackProxy];
+      menuLabel = aup.getString('not_matching') + ': ' + selectedProxy;
+    }
+
+    groupMenu.className = 'chooseProxy4RuleGroups';
+    groupMenu.setAttribute('label', menuLabel);
+    groupMenu.setAttribute('disabled', prefs.proxyMode != 'auto');
+    groupMenu.setAttribute('value', subscription ? subscription.url : 'fallback');
+    groupMenu.appendChild(groupPopup);
+
+    // popup proxy items created here
+    createMenuItem(aup.getString(subscription ? 'default_proxy' : 'no_proxy'));
+    groupPopup.appendChild(cE('menuseparator'));
+    proxy.getName.forEach(createMenuItem);
+
+    flagItem.parentNode.insertBefore(groupMenu, flagItem);
+
+    // place this function here for convenience,
+    // though out of createRuleGroupProxyPopup() would be better.
+    function createMenuItem(proxyName)
+    {
+      var menuItem = cE('menuitem');
+      menuItem.setAttribute('type', 'radio');
+      menuItem.setAttribute('label', proxyName);
+      menuItem.setAttribute('checked', proxyName == selectedProxy);
+      menuItem.addEventListener("command", setGroupProxy, false);
+      groupPopup.appendChild(menuItem);
+    }
+  }
+}
+
+function setGroupProxy(event)
+{
+  var menuItem = event.target,
+      selectedIndex = proxy.getName.indexOf(menuItem.label),
+      subscriptionUrl = menuItem.parentNode.parentNode.value;
+
+  if (subscriptionUrl == 'fallback') {
+    prefs.fallbackProxy = selectedIndex;
+    prefs.save();
+  }
+  else {
+    filterStorage.knownSubscriptions[subscriptionUrl].proxy = selectedIndex;
+  }
+}
+
+function cycleProxyMode()
+{
+  prefs.proxyMode = proxy.mode[(proxy.mode.indexOf(prefs.proxyMode) + 1) % 3];
+  prefs.save();
 }

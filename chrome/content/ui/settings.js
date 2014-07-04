@@ -758,7 +758,7 @@ function onSubscriptionChange(/**String*/ action, /**Array of Subscription*/ sub
 {
   if (action == "reload")
   {
-    // TODO: reinit?
+    // @TODO: reinit?
     return;
   }
 
@@ -842,27 +842,13 @@ function editFilter(type) /**Boolean*/
   }
 
   if (type != "filter" && subscription instanceof aup.RegularSubscription)
-    editSubscription(subscription);
+    ruleGroupSettings();
+  else if (type != "filter" && treeView.isContainer(treeView.selection.currentIndex))
+    ruleGroupSettings();
   else
     treeView.startEditor(false);
 
   return true;
-}
-
-/**
- * Open the "Edit Proxy Server" dialog called by menu
- */
-function editProxyServer()
-{
-  openDialog("editProxyServer.xul", "_blank", "chrome,centerscreen,modal");
-}
-
-/**
- * Open the "Choose Proxy Server" dialog called by menu
- */
-function chooseProxyServer()
-{
-  openDialog("chooseProxyServer.xul", "_blank", "chrome,centerscreen,modal");
 }
 
 /**
@@ -936,7 +922,9 @@ function removeFilters(allowSubscriptions)
         return;
     }
 
-    if (selectedSubscription && selectedSubscription instanceof aup.RegularSubscription && confirm(aup.getString("remove_subscription_warning")))
+    if (selectedSubscription && (
+        selectedSubscription instanceof aup.RegularSubscription && confirm(aup.getString("remove_subscription_warning")) ||
+        selectedSubscription instanceof aup.SpecialSubscription && confirm(aup.getString("remove_userRuleGroup_warning"))))
       treeView.removeSubscription(selectedSubscription);
   }
 }
@@ -1157,14 +1145,14 @@ function fillContext()
 
   if (selectedSubscription instanceof aup.RegularSubscription)
   {
-    E("context-editsubscription").hidden = false;
     E("context-edit").hidden = true;
+    E("context-synchsubscription").hidden = false;
   }
   else
   {
-    E("context-editsubscription").hidden = true;
     E("context-edit").hidden = false;
-    E("context-edit").setAttribute("disabled", !(currentSubscription instanceof aup.SpecialSubscription && currentFilter instanceof aup.Filter));
+    E("context-edit").setAttribute("disabled", !(currentFilter instanceof aup.Filter));
+    E("context-synchsubscription").hidden = true;
   }
 
   E("context-synchsubscription").setAttribute("disabled", !(selectedSubscription instanceof aup.DownloadableSubscription));
@@ -1183,7 +1171,7 @@ function fillContext()
   E("copy-command").setAttribute("disabled", !hasFilters);
   E("cut-command").setAttribute("disabled", !hasRemovable);
   E("paste-command").setAttribute("disabled", !hasFlavour);
-  E("remove-command").setAttribute("disabled", !(hasRemovable || selectedSubscription instanceof aup.RegularSubscription));
+  E("remove-command").setAttribute("disabled", !(hasRemovable || selectedSubscription instanceof aup.RegularSubscription || selectedSubscription instanceof aup.SpecialSubscription));
 
   if (activeFilters.length || (selectedSubscription && !currentFilter))
   {
@@ -1360,7 +1348,7 @@ function createSortFunction(cmpFunc, fallbackFunc, desc)
     let isLast1 = (filter1.__proto__ == null);
     let isLast2 = (filter2.__proto__ == null);
     if (isLast1)
-      return (isLast2 ? 0 : 1)
+      return (isLast2 ? 0 : 1);
     else if (isLast2)
       return -1;
 
@@ -1369,7 +1357,7 @@ function createSortFunction(cmpFunc, fallbackFunc, desc)
       return fallbackFunc(filter1, filter2);
     else
       return factor * ret;
-  }
+  };
 }
 
 const nsITreeView = Ci.nsITreeView;
@@ -1457,10 +1445,6 @@ let treeView = {
     let count = 0;
     for each (let subscription in this.subscriptions)
     {
-      // Special subscriptions are only shown if they aren't empty
-      if (subscription instanceof aup.SpecialSubscription && subscription._sortedFilters.length == 0)
-        continue;
-
       count++;
       if (!(subscription.url in this.closed))
         count += subscription._description.length + subscription._sortedFilters.length;
@@ -1504,7 +1488,7 @@ let treeView = {
     else if (col != "col-filter")
       return null;
     else if (!filter)
-      return (subscription instanceof aup.RegularSubscription ? this.titlePrefix : "") + subscription.title;
+      return subscription.typeDesc + (subscription.title ? ": "+subscription.title : "");
     else
       return filter;
   },
@@ -1663,7 +1647,7 @@ let treeView = {
     if (this.dragFilter)
     {
       // Dragging a filter
-      return filter && subscription instanceof aup.SpecialSubscription && subscription.isFilterAllowed(this.dragFilter);
+      return filter && subscription instanceof aup.SpecialSubscription;
     }
     else
     {
@@ -1685,7 +1669,7 @@ let treeView = {
     if (this.dragFilter)
     {
       // Dragging a filter
-      if (!(filter && subscription instanceof aup.SpecialSubscription && subscription.isFilterAllowed(this.dragFilter)))
+      if (!(filter && subscription instanceof aup.SpecialSubscription))
         return;
 
       let oldSubscription = this.dragSubscription;
@@ -1771,11 +1755,11 @@ let treeView = {
     onChange();
   },
 
-  getCellValue: function() {return null},
-  getProgressMode: function() {return null},
-  getImageSrc: function() {return null},
-  isSeparator: function() {return false},
-  isEditable: function() {return false},
+  getCellValue: function() {return null;},
+  getProgressMode: function() {return null;},
+  getImageSrc: function() {return null;},
+  isSeparator: function() {return false;},
+  isEditable: function() {return false;},
   cycleCell: function() {},
   performAction: function() {},
   performActionOnRow: function() {},
@@ -1804,13 +1788,6 @@ let treeView = {
    * @type Object
    */
   closed: null,
-
-  /**
-   * String to be displayed before the title of regular subscriptions
-   * @type String
-   * @const
-   */
-  titlePrefix: aup.getString("subscription_description") + " ",
 
   /**
    * Map of atoms being used as col/row/cell properties, String => nsIAtom
@@ -1854,8 +1831,9 @@ let treeView = {
   getSubscriptionRowCount: function(/**Subscription*/ subscription) /**Integer*/
   {
     if (subscription instanceof aup.SpecialSubscription && subscription._sortedFilters.length == 0)
-      return 0;
-
+    {
+      return 1;
+    }
     if (subscription.url in this.closed)
       return 1;
 
@@ -1875,10 +1853,6 @@ let treeView = {
   {
     for each (let subscription in this.subscriptions)
     {
-      // Special subscriptions are only shown if they aren't empty
-      if (subscription instanceof aup.SpecialSubscription && subscription._sortedFilters.length == 0)
-        continue;
-
       // Check whether the subscription row has been requested
       row--;
       if (row < 0)
@@ -2215,15 +2189,19 @@ let treeView = {
     {
       for each (let s in this.subscriptions)
       {
-        if (s instanceof aup.SpecialSubscription && s.isFilterAllowed(filter))
+        if (s instanceof aup.SpecialSubscription)
         {
           if (s._sortedFilters.indexOf(filter) >= 0 || s.filters.indexOf(filter) >= 0)
           {
-            subscription = s;
-            break;
+            if (!s.disabled) {
+              subscription = s;
+              break;
+            }
+            else if (subscription.disabled)
+              subscription = s;
           }
 
-          if (!subscription || s.priority > subscription.priority)
+          if (!subscription || subscription.disabled && !s.disabled)
             subscription = s;
         }
       }
@@ -2358,13 +2336,7 @@ let treeView = {
     else
       subscription._sortedFilters = subscription.filters;
 
-    if (subscription instanceof aup.SpecialSubscription && subscription._sortedFilters.length == 0)
-    {
-      // Empty special subscriptions aren't shown, remove everything
-      this.boxObject.rowCountChanged(parentRow, -rowCount);
-      newSelection -= rowCount;
-    }
-    else if (!(subscription.url in this.closed))
+    if (!(subscription.url in this.closed))
     {
       newSelection = parentRow + 1 + subscription._description.length + index;
       this.boxObject.rowCountChanged(newSelection, -1);
@@ -2908,7 +2880,7 @@ let treeView = {
     if (!(subscription instanceof aup.SpecialSubscription) || !(filter instanceof aup.Filter))
     {
       let dummySubscription = new aup.Subscription("~dummy~");
-      dummySubscription.title = aup.getString("new_filter_group_title");
+      dummySubscription._typeDescId = "new_filter_group_title";
       dummySubscription.filters.push(" ");
       dummySubscription = createSubscriptionWrapper(dummySubscription);
 
@@ -3017,7 +2989,7 @@ let treeView = {
     if (save && text && (insert || !(filter instanceof aup.Filter) || text != filter.text))
     {
       let newFilter = getFilterByText(text);
-      if (filter && subscription.isFilterAllowed(newFilter))
+      if (filter)
         this.addFilter(newFilter, subscription, filter);
       else
         this.addFilter(newFilter);
@@ -3039,17 +3011,10 @@ let treeView = {
 
 
 
-function changeClickBehaver(action, isToobar)
+function changeClickBehaver(action)
 {
-  if (!isToobar) {
-    if (prefs.defaultstatusbaraction == action) return;
-    prefs.defaultstatusbaraction = action;
-  }
-  else {
-    if (prefs.defaulttoolbaraction == action) return;
-    prefs.defaulttoolbaraction = action;
-  }
-
+  prefs.defaulttoolbaraction = action;
+  prefs.defaultstatusbaraction = action;
   prefs.save();
 }
 
@@ -3057,4 +3022,33 @@ function fillClickBehaviourPopup(e, isToolbar)
 {
   var value = isToolbar ? prefs.defaulttoolbaraction : prefs.defaultstatusbaraction;
   e.target.children[value].setAttribute("checked", true);
+}
+
+function addRuleGroup()
+{
+  var isUsedTitle = new Array;
+  for each (var subscription in filterStorage.subscriptions) {
+    isUsedTitle[subscription.title] = true;
+  }
+
+  var title = "";
+  if (isUsedTitle[""] || isUsedTitle["undefined"]) {
+    for (title=2; true; title++) {
+      if (!isUsedTitle[title]) break;
+    }
+  }
+
+  filterStorage.addSubscription(new aup.SpecialSubscription(null, title));
+  // @TODO: also add a directive comment rule to this group.
+  // @TODO: group name: 1(omit), 2, 3...
+}
+
+function editProxyServer()
+{
+  openDialog("editProxyServer.xul", "_blank", "chrome,centerscreen,modal");
+}
+
+function ruleGroupSettings()
+{
+  openDialog("chooseProxyServer.xul", "_blank", "chrome,centerscreen,modal");
 }

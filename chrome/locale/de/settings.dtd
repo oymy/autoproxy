@@ -1,8 +1,10 @@
 <!ENTITY dialog.title "AutoProxy Einstellungen">
 <!ENTITY filters.label "Proxy Regel">
 <!ENTITY filters.accesskey "R">
-<!ENTITY add.label "Regel hinzufügen">
+<!ENTITY add.label "Proxy-Regel hinzufügen">
 <!ENTITY add.accesskey "z">
+<!ENTITY addRuleGroup.label "Regelgruppe hinzufügen">
+<!ENTITY addRuleGroup.accesskey "G">
 <!ENTITY addsubscription.label "Regel-Abonnement hinzufügen">
 <!ENTITY addsubscription.accesskey "A">
 <!ENTITY synchsubscriptions.label "Alle Abonnements aktualisieren">
@@ -51,7 +53,7 @@
 <!ENTITY mode.auto.accesskey "A">
 <!ENTITY mode.global.label "Globaler Modus">
 <!ENTITY mode.global.accesskey "G">
-<!ENTITY mode.disabled.label "AutoProxy deaktivieren">
+<!ENTITY mode.disabled.label "Proxy deaktivieren">
 <!ENTITY mode.disabled.accesskey "d">
 <!ENTITY showintoolbar.label "In Symbolleiste anzeigen">
 <!ENTITY showintoolbar.accesskey "y">
@@ -61,13 +63,10 @@
 <!ENTITY help.accesskey "H">
 <!ENTITY gettingStarted.label "Einführung">
 <!ENTITY gettingStarted.accesskey "f">
-<!ENTITY gettingStarted.url "http://autoproxy.org/en/getting_started">
 <!ENTITY faq.label "Häufig gestellte Fragen">
 <!ENTITY faq.accesskey "F">
-<!ENTITY faq.url "http://autoproxy.org/en/faq">
 <!ENTITY filterdoc.label "AutoProxy Regeln schreiben">
 <!ENTITY filterdoc.accesskey "r">
-<!ENTITY filterdoc.url "http://autoproxy.org/en/rules">
 <!ENTITY about.label "Über AutoProxy">
 <!ENTITY about.accesskey "b">
 <!ENTITY description "Die folgenden Regeln bestimmen, welche Adressen via Proxy angesprochen werden sollen und welche nicht:">
@@ -84,7 +83,7 @@
 <!ENTITY context.edit.label "Regel bearbeiten">
 <!ENTITY context.resethitcount.label "Zugriffsstatistik für Regel zurücksetzen">
 <!ENTITY context.synchsubscription.label "Abonnement jetzt aktualisieren">
-<!ENTITY context.editsubscription.label "Abonnement bearbeiten">
+<!ENTITY context.editsubscription.label "Regelgruppe bearbeiten">
 <!ENTITY context.moveup.label "Regel nach oben verschieben">
 <!ENTITY context.movedown.label "Regel nach unten verschieben">
 <!ENTITY context.movegroupup.label "Gruppe nach oben verschieben">
@@ -93,3 +92,10 @@
 <!ENTITY context.disable.label "Deaktivieren">
 <!ENTITY apply.label "Anwenden">
 <!ENTITY apply.accesskey "A">
+<!ENTITY changeClickBehaviour.label "Bei Klick auf Symbol:">
+<!ENTITY changeClickBehaviour_context "Kontextmenü:">
+<!ENTITY changeClickBehaviour_proxyMenu "Proxymenü">
+<!ENTITY changeClickBehaviour_cycleProxy "Standardproxy auswählen">
+<!ENTITY changeClickBehaviour_proxyMode "Proxy Modus auswählen">
+<!ENTITY changeClickBehaviour_preference "Einstellung">
+<!ENTITY changeClickBehaviour_proxyable "Via Proxy ladbare Objekte">

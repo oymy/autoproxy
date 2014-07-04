@@ -16,7 +16,7 @@
  * The Initial Developer of the Original Code is
  * Wang Congming <lovelywcm@gmail.com>.
  *
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2009-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -25,40 +25,39 @@
 
 function init()
 {
-  // row for setting default proxy
-  menu.newList( E('defaultProxy'), prefs.defaultProxy, true );
+  var rows = document.getElementsByTagName('rows')[0];
+
+  // menu list for setting default proxy
+  E('defaultProxy').firstChild.value = aup.getString('default_proxy');
+  menu.newList(E('defaultProxy'), prefs.defaultProxy, true);
 
   // one row per rule group
-  var rows = document.getElementsByTagName('rows')[0];
-  for each (let subscription in aup.filterStorage.subscriptions) {
-    if ( subscription.url == '~il~' || subscription.url == '~wl~' ) continue;
-    var row = cE('row');
-    var groupName = cE('label');
-    row.appendChild(groupName);
-    rows.insertBefore( row, E('groupSeparator') );
+  for each (let subscription in filterStorage.subscriptions) {
+    var group      = cE("row"),
+        groupType  = cE("label"),
+        groupTitle = cE("textbox");
+    rows.insertBefore(group, E('groupSeparator'));
 
-    groupName.setAttribute('value',
-      (subscription instanceof aup.RegularSubscription ?
-                          aup.getString('subscription_description') : '自定义：')
-      + subscription.title
-    );
+    group.appendChild(groupType);
+    group.appendChild(groupTitle);
+    groupType.setAttribute("value", subscription.typeDesc);
+    groupTitle.setAttribute("value", subscription.title || aup.getString("unnamed"));
 
-    // for http, https and ftp proxy, we need 3 menu lists per row
-    // Parameter given to menu.newList() is to mark this munu item as selected
-    // dummy, to be implemented
-    menu.newList( row, proxy.server.length );
-    menu.newList( row, proxy.server.length );
-    menu.newList( row, proxy.server.length );
+    menu.newList(group, subscription.proxy + 1);
+  }
+
+  // if user has no rule group, insert a note
+  if (E('groupSeparator').previousSibling.tagName == 'menuseparator') {
+    var note = cE('label');
+    note.setAttribute('disabled', true);
+    note.setAttribute('value', aup.getString('no_proxy_rule'));
+    E('groupSeparator').parentNode.insertBefore(note, E('groupSeparator'));
   }
 
   // row for setting fallback proxy
-  menu.newList( E('fallbackProxy'),
-        prefs.fallbackProxy == -1 ? proxy.server.length : prefs.fallbackProxy );
-  // dummy, to be implemented
-  menu.newList( E('fallbackProxy'), 0 );
-  menu.newList( E('fallbackProxy'), 0 );
-
-  defaultProxyforAll(true);
+  E('fallbackProxy').firstChild.value = aup.getString('not_matching');
+  menu.newList(E('fallbackProxy'),
+    (prefs.fallbackProxy + proxy.server.length + 1) % (proxy.server.length + 1), "fallbackProxy");
 }
 
 var menu =
@@ -67,28 +66,28 @@ var menu =
 
   /**
    * Create a menu list with several menu items:
-   *   "direct connect" item
-   *    ....
-   *    several items according to how many proxies
-   *    ...
    *   "default proxy" item
+   *    ....
+   *    several items according to how many proxy servers
    *
    * @param node {DOM node}: which node should this new menu list append to
    * @param index {int}: which menu item should be selected by default
-   * @param isDefaultProxyPopup {boolean}: if true, "default proxy" menu item won't be created
+   * @todo: @param isDefaultProxyPopup {boolean}: if true, "default proxy" menu item won't be created
    */
-  newList: function(node, index, isDefaultProxyPopup)
+  newList: function(node, index, special)
   {
     this.menuList = cE('menulist');
-    this.menuList.appendChild( cE('menupopup') );
-    node.appendChild( this.menuList );
+    this.menuList.appendChild(cE('menupopup'));
+    node.appendChild(this.menuList);
+
+    if (!special)
+      this.newItem(aup.getString('default_proxy'));
 
     proxy.getName.forEach(this.newItem);
 
-    if (isDefaultProxyPopup)
-      this.menuList.firstChild.firstChild.hidden = true;
-    else
-      this.newItem('默认代理');
+    if (special == "fallbackProxy") {
+      this.newItem(aup.getString('no_proxy'));
+    }
 
     this.menuList.selectedIndex = index;
   },
@@ -102,33 +101,29 @@ var menu =
     menuItem.setAttribute('label', proxyName);
     menu.menuList.firstChild.appendChild(menuItem);
   }
-}
-
-function defaultProxyforAll(init)
-{
-  if (!init) prefs.defaultProxyforAll = ! prefs.defaultProxyforAll;
-
-  var checkbox = document.getElementsByTagName('checkbox')[0];
-  checkbox.setAttribute('checked', prefs.defaultProxyforAll);
-
-  for ( var row=E('description'); row!=E('groupSeparator'); row=row.nextSibling )
-    for ( var node=row.firstChild; node; node=node.nextSibling )
-      node.setAttribute('disabled', prefs.defaultProxyforAll);
-
-  // not implemented, temporarily disable them
-  var menulists = document.getElementsByTagName('menulist');
-  for (var i=1; i<menulists.length; i++)
-    if (i != menulists.length-3) menulists[i].setAttribute('disabled', true);
-}
+};
 
 function save()
 {
-  prefs.defaultProxy = E('defaultProxy').lastChild.selectedIndex;
+  var textboxs = document.getElementsByTagName("textbox");
+  for (var j=0; j<textboxs.length; j++) {
+    filterStorage.subscriptions[j].title = (
+      textboxs[j].value == aup.getString("unnamed") ? "" : textboxs[j].value);
+  }
 
-  var fallbackId = E('fallbackProxy').firstChild.nextSibling.selectedIndex;
-  if ( fallbackId == proxy.server.length ) fallbackId = -1;
-  prefs.fallbackProxy = fallbackId;
-
-  // other configs are ignored, not implemented yet
-  prefs.save();
+  var menus = document.getElementsByTagName("menulist");
+  for (var i=0; i<menus.length; i++) {
+    var selected = menus[i].selectedIndex;
+    if (i == 0) {
+      prefs.defaultProxy = selected;
+      prefs.save();
+    }
+    else if (i == menus.length - 1) {
+      prefs.fallbackProxy = selected == proxy.server.length ? -1 : selected;
+      prefs.save();
+    }
+    else {
+      filterStorage.subscriptions[i-1].proxy = selected - 1;
+    }
+  }
 }

@@ -1,11 +1,1 @@
-<!ENTITY dialog.title      "选择各个规则组各自使用的代理">
-
-<!ENTITY default.label     "默认代理">
-
-<!ENTITY checkbox.label    "所有的规则匹配时均使用默认代理">
-
-<!ENTITY http.label        "HTTP 代理">
-
-<!ENTITY https.label       "HTTPS 代理">
-
-<!ENTITY ftp.label         "FTP/Gopher 代理">
+<!ENTITY dialog.title "选择代理">

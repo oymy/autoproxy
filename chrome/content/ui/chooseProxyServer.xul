@@ -42,30 +42,20 @@
 
 <grid>
   <rows>
-
     <row id="defaultProxy">
-      <label value="&default.label;"/>
-      <!-- menu list will be append here by JS -->
+      <label/>
+      <!-- menu list will be insert here by JS -->
     </row>
-    <checkbox label="&checkbox.label;" oncommand="defaultProxyforAll()"/>
     <menuseparator/>
 
-    <row id="description">
-      <label value=""/>
-      <label value="&http.label;"/>
-      <label value="&https.label;"/>
-      <label value="&ftp.label;"/>
-    </row>
-
-    <!-- rule groups will be append here by JS -->
+    <!-- rule groups will be insert here by JS -->
     <menuseparator id="groupSeparator"/>
 
     <row id="fallbackProxy">
-      <label value="内置组：无规则匹配时"/>
-      <!--3 menu lists (for http, https, ftp) will be append here by JS -->
+      <label/>
+      <!-- fallback proxy menu list will be insert here by JS -->
     </row>
     <menuseparator/>
-
   </rows>
 </grid>
 </dialog>

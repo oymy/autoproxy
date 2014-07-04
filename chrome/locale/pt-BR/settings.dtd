@@ -1,8 +1,10 @@
 <!ENTITY dialog.title "Preferências do AutoProxy">
 <!ENTITY filters.label "Regra do Proxy">
 <!ENTITY filters.accesskey "R">
-<!ENTITY add.label "Acrescentar regra">
+<!ENTITY add.label "Adicionar regra de proxy">
 <!ENTITY add.accesskey "A">
+<!ENTITY addRuleGroup.label "Adicionar grupo de regras">
+<!ENTITY addRuleGroup.accesskey "G">
 <!ENTITY addsubscription.label "Acrescentar assinatura de regra">
 <!ENTITY addsubscription.accesskey "S">
 <!ENTITY synchsubscriptions.label "Atualizar todas as assinaturas">
@@ -19,8 +21,8 @@
 <!ENTITY proxies.accesskey "S">
 <!ENTITY editproxies.label "Editar servidor proxy">
 <!ENTITY editproxies.accesskey "E">
-<!ENTITY chooseproxies.label "Choose proxy server">
-<!ENTITY chooseproxies.accesskey "C">
+<!ENTITY chooseproxies.label "Escolha o servidor proxy">
+<!ENTITY chooseproxies.accesskey "E">
 <!ENTITY edit.label "Editar">
 <!ENTITY edit.accesskey "E">
 <!ENTITY cut.label "Recortar">
@@ -47,11 +49,11 @@
 <!ENTITY sort.descending.accesskey "Z">
 <!ENTITY options.label "Opções">
 <!ENTITY options.accesskey "O">
-<!ENTITY mode.auto.label "Automatic Mode">
+<!ENTITY mode.auto.label "Modo Automático">
 <!ENTITY mode.auto.accesskey "A">
-<!ENTITY mode.global.label "Global Mode">
+<!ENTITY mode.global.label "Modo Global">
 <!ENTITY mode.global.accesskey "G">
-<!ENTITY mode.disabled.label "Disable AutoProxy">
+<!ENTITY mode.disabled.label "Desativar Proxy">
 <!ENTITY mode.disabled.accesskey "D">
 <!ENTITY showintoolbar.label "Exibir na barra de ferramentas">
 <!ENTITY showintoolbar.accesskey "B">
@@ -61,13 +63,10 @@
 <!ENTITY help.accesskey "H">
 <!ENTITY gettingStarted.label "Iniciando">
 <!ENTITY gettingStarted.accesskey "s">
-<!ENTITY gettingStarted.url "http://autoproxy.org/en/getting_started">
 <!ENTITY faq.label "Perguntas Frequentes">
 <!ENTITY faq.accesskey "F">
-<!ENTITY faq.url "http://autoproxy.org/en/faq">
 <!ENTITY filterdoc.label "Gravando regras do AutoProxy">
 <!ENTITY filterdoc.accesskey "R">
-<!ENTITY filterdoc.url "http://autoproxy.org/en/rules">
 <!ENTITY about.label "Sobre o AutoProxy">
 <!ENTITY about.accesskey "B">
 <!ENTITY description "As seguintes regras determinam que endereços podem ser filtrados pelo proxy e quais não podem:">
@@ -84,7 +83,7 @@
 <!ENTITY context.edit.label "Editar regra">
 <!ENTITY context.resethitcount.label "Zerar as estatísticas de hit para regras">
 <!ENTITY context.synchsubscription.label "Atualizar assinatura agora">
-<!ENTITY context.editsubscription.label "Editar assinatura">
+<!ENTITY context.editsubscription.label "Editar regra do grupo">
 <!ENTITY context.moveup.label "Mover regra para cima">
 <!ENTITY context.movedown.label "Mover regra para baixo">
 <!ENTITY context.movegroupup.label "Mover grupo para cima">
@@ -93,3 +92,10 @@
 <!ENTITY context.disable.label "Desativar">
 <!ENTITY apply.label "Aplicar">
 <!ENTITY apply.accesskey "P">
+<!ENTITY changeClickBehaviour.label "Ao clicar no ícone:">
+<!ENTITY changeClickBehaviour_context "Menu de contexto">
+<!ENTITY changeClickBehaviour_proxyMenu "Menu Proxy">
+<!ENTITY changeClickBehaviour_cycleProxy "Rodar proxy padrão">
+<!ENTITY changeClickBehaviour_proxyMode "Rodar modo de proxy">
+<!ENTITY changeClickBehaviour_preference "Preferência">
+<!ENTITY changeClickBehaviour_proxyable "Itens sujeitos a Proxy">

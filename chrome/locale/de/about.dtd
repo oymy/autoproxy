@@ -1,8 +1,7 @@
 <!ENTITY dialog.title "Über AutoProxy">
-<!ENTITY caption.title "AutoProxy">
 <!ENTITY version.title "Version">
-<!ENTITY description "AutoProxy erlaubt es, zu entscheiden, welche Seite via Proxy Server geladen wird, während die anderen direkt angesprochen werden. Der Proxy-Status muss nicht mehr manuell aktiviert bzw. deaktiviert werden.">
-<!ENTITY homepage.label "AutoProxy Homepage:">
-<!ENTITY homepage.url "http://autoproxy.org/">
+<!ENTITY homepage.label "Startseite:">
 <!ENTITY author.label "Autor:">
+<!ENTITY members.label "Aktive Teammitglieder:">
 <!ENTITY contributors.label "Mitwirkende:">
+<!ENTITY translators.label "Übersetzer:">

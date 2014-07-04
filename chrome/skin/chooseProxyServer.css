@@ -16,7 +16,7 @@
  * The Initial Developer of the Original Code is
  * Wang Congming <lovelywcm@gmail.com>.
  *
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2009-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -26,10 +26,19 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#defaultProxy > label {
+row > label {
   text-align: right;
 }
 
-#description {
+menuseparator + label {
+  text-align: center;
+}
+
+#defaultProxy > label, #fallbackProxy > label {
   font-weight: bold;
+  font-size: 120%;
+}
+
+menulist {
+  min-width: 135px;
 }

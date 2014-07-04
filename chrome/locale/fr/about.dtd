@@ -1,8 +1,7 @@
 <!ENTITY dialog.title "À propos de AutoProxy">
-<!ENTITY caption.title "AutoProxy">
 <!ENTITY version.title "Version">
-<!ENTITY description "AutoProxy vous permet de choisir quels sites utiliseront le proxy, tout en laissant les autres se connecter directement. Vous n&apos;avez plus besoin d&apos;activer et / ou désactiver le proxy manuellement.">
-<!ENTITY homepage.label "Page Web de AutoProxy :">
-<!ENTITY homepage.url "http://autoproxy.org/">
+<!ENTITY homepage.label "Homepage:">
 <!ENTITY author.label "Auteur :">
-<!ENTITY contributors.label "Contributions :">
+<!ENTITY members.label "Active team members:">
+<!ENTITY contributors.label "Contributors:">
+<!ENTITY translators.label "Translators:">

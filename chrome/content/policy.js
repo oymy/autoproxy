@@ -52,8 +52,6 @@ var policy =
    */
   localizedDescr: null,
 
-  shouldProxy: function(){},
-
   /**
    * Assigned in shouldLoad() & used by autoMatching().
    * Since autoMatching is called by applyFilter,
@@ -111,7 +109,7 @@ var policy =
       if (contentType != this.type.OBJECT && (node instanceof Ci.nsIDOMHTMLObjectElement || node instanceof Ci.nsIDOMHTMLEmbedElement))
         contentType = this.type.OBJECT;
 
-      docDomain = this.getHostname(wnd.location.href);
+      docDomain = wnd.location.host;
       thirdParty = this.isThirdParty(location, docDomain);
     }
 
@@ -132,22 +130,7 @@ var policy =
     if (match && arguments.length == 1)
       filterStorage.increaseHitCount(match);
 
-    return match && !(match instanceof WhitelistFilter);
-  },
-
-  /**
-   * Extracts the hostname from a URL (might return null).
-   */
-  getHostname: function(/**String*/ url) /**String*/
-  {
-    try
-    {
-      return unwrapURL(url).host;
-    }
-    catch(e)
-    {
-      return null;
-    }
+    return match;
   },
 
   /**
@@ -245,11 +228,17 @@ var policy =
         }
       }
     }
-    catch (e if (e != Cr.NS_BASE_STREAM_WOULD_BLOCK))
+    catch (e)
     {
       // We shouldn't throw exceptions here - this will prevent the redirect.
       dump("AutoProxy: Unexpected error in policy.onChannelRedirect: " + e + "\n");
     }
+  },
+
+  asyncOnChannelRedirect: function(oldChannel, newChannel, flags, cb)
+  {
+    this.onChannelRedirect(oldChannel, newChannel, flags);
+    cb.onRedirectVerifyCallback(0);
   }
 };
 

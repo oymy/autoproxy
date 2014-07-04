@@ -50,11 +50,12 @@
     </tooltip>
     <menupopup id="aup-status-popup">
       <menuitem id="aup-status-settings" label="&settings.label;..." accesskey="&settings.accesskey;" key="aup-key-settings" command="aup-command-settings"/>
+      <menuitem id="aup-status-report" label="&report.label;..." accesskey="&report.accesskey;" key="aup-key-report" command="aup-command-report"/>
       <menuitem id="aup-status-opensidebar" label="&opensidebar.label;" accesskey="&opensidebar.accesskey;" key="aup-key-sidebar" command="aup-command-sidebar"/>
       <menuitem id="aup-status-closesidebar" label="&closesidebar.label;" accesskey="&closesidebar.accesskey;" key="aup-key-sidebar" command="aup-command-sidebar"/>
       <menuseparator/>
-      <menu id="aup-status-switchProxy" label="&switchProxy.label;" key="aup-key-contextmenu">
-        <menupopup id="options-switchProxy"/>
+      <menu id="aup-status-defaultProxy" key="aup-key-contextmenu">
+        <menupopup/>
       </menu>
       <menuseparator/>
       <!--"Enable Proxy On" menu items will be insert here by JS-->
@@ -62,16 +63,14 @@
       <menuitem id="aup-status-modeglobal" label="&mode.global.label;" accesskey="&mode.global.accesskey;" type="radio" key="aup-key-modeglobal" command="aup-command-modeglobal"/>
       <menuitem id="aup-status-modedisabled" label="&mode.disabled.label;" accesskey="&mode.disabled.accesskey;" type="radio" key="aup-key-modedisabled" command="aup-command-modedisabled"/>
     </menupopup>
-    <menupopup id="aup-popup-switchProxy"></menupopup>
-    <tooltip id="showCurrentProxy" orient="horizontal">
-      <label value="&switchProxy.label;"/>
-      <label id="showCurrentProxyValue"/>
-    </tooltip>
+    <menupopup id="aup-popup-defaultProxyList"></menupopup>
+    <tooltip id="cycleDefaultProxy"></tooltip>
   </popupset>
   <keyset id="aup-keyset"/>
   <commandset id="aup-commandset">
     <!-- Dummy oncommand attributes are work-arounds for bug 371900 -->
     <command id="aup-command-settings" oncommand="//"/>
+    <command id="aup-command-report" oncommand="//"/>
     <command id="aup-command-sidebar" oncommand="//"/>
     <command id="aup-command-contextmenu" oncommand="//"/>
     <command id="aup-command-modeauto" oncommand="//"/>
@@ -104,6 +103,6 @@
         <toolbarbutton id="aup-sidebar-close" command="aup-command-sidebar" tooltiptext="&closesidebar.label;"/>
       </toolbar>
     </toolbox>
-    <iframe id="aup-sidebar-browser" flex="1"/>
+    <iframe id="aup-sidebar-browser" flex="1" src=""/>
   </vbox>
 </overlay>

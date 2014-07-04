@@ -1,4 +1,5 @@
 <!ENTITY status.tooltip "Estado:">
+<!ENTITY defaultProxy.tooltip "Proxy por defecto:">
 <!ENTITY blocked.tooltip "Elementos pasados por proxy en esta página:">
 <!ENTITY filters.tooltip "Reglas más activas:">
 <!ENTITY menuitem.label "Preferencias de AutoProxy">
@@ -10,11 +11,12 @@
 <!ENTITY context.frame.label "Marco Proxy">
 <!ENTITY sidebar.title "Elementos pasables por proxy en la página actual">
 <!ENTITY settings.label "Preferencias">
-<!ENTITY settings.accesskey "F">
-<!ENTITY opensidebar.label "Abrir elementos pasables por proxy">
-<!ENTITY opensidebar.accesskey "B">
-<!ENTITY closesidebar.label "Cerrar elementos pasables por proxy">
-<!ENTITY closesidebar.accesskey "B">
-<!ENTITY whitelist.site.label "Desactivar en --">
-<!ENTITY objecttab.title "Proxy">
-<!ENTITY objecttab.tooltip "Pincha aquí para pasar por proxy este objeto con AutoProxy">
+<!ENTITY settings.accesskey "P">
+<!ENTITY report.label "Enviar a gfwList">
+<!ENTITY report.accesskey "R">
+<!ENTITY opensidebar.label "Elementos a pasar por el proxy">
+<!-- Note: This access key should usually be the same as closesidebar.accesskey. It is the same menu item with different label depending on whether the sidebar is currently open.-->
+<!ENTITY opensidebar.accesskey "V">
+<!ENTITY closesidebar.label "Cerrar elementos a pasar por el proxy">
+<!-- Note: This access key should usually be the same as opensidebar.accesskey. It is the same menu item with different label depending on whether the sidebar is currently open.-->
+<!ENTITY closesidebar.accesskey "V">

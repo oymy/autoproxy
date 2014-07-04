@@ -3,8 +3,10 @@
 <!ENTITY filters.label                   "Proxy Rule">
 <!ENTITY filters.accesskey               "R">
 
-<!ENTITY add.label                       "Add rule">
+<!ENTITY add.label                       "Add proxy rule">
 <!ENTITY add.accesskey                   "A">
+<!ENTITY addRuleGroup.label              "Add rule group">
+<!ENTITY addRuleGroup.accesskey          "G">
 <!ENTITY addsubscription.label           "Add rule subscription">
 <!ENTITY addsubscription.accesskey       "S">
 <!ENTITY synchsubscriptions.label        "Update all subscriptions">
@@ -60,7 +62,7 @@
 <!ENTITY mode.auto.accesskey             "A">
 <!ENTITY mode.global.label               "Global Mode">
 <!ENTITY mode.global.accesskey           "G">
-<!ENTITY mode.disabled.label             "Disable AutoProxy">
+<!ENTITY mode.disabled.label             "Disable Proxy">
 <!ENTITY mode.disabled.accesskey         "D">
 <!ENTITY showintoolbar.label             "Show in toolbar">
 <!ENTITY showintoolbar.accesskey         "B">
@@ -72,13 +74,10 @@
 
 <!ENTITY gettingStarted.label            "Getting started">
 <!ENTITY gettingStarted.accesskey        "s">
-<!ENTITY gettingStarted.url              "http://autoproxy.org/en/getting_started">
 <!ENTITY faq.label                       "Frequently Asked Questions">
 <!ENTITY faq.accesskey                   "F">
-<!ENTITY faq.url                         "http://autoproxy.org/en/faq">
 <!ENTITY filterdoc.label                 "Writing AutoProxy rules">
 <!ENTITY filterdoc.accesskey             "R">
-<!ENTITY filterdoc.url                   "http://autoproxy.org/en/rules">
 <!ENTITY about.label                     "About AutoProxy">
 <!ENTITY about.accesskey                 "B">
 
@@ -98,7 +97,7 @@
 <!ENTITY context.edit.label              "Edit rule">
 <!ENTITY context.resethitcount.label     "Reset hit statistics for rule">
 <!ENTITY context.synchsubscription.label "Update subscription now">
-<!ENTITY context.editsubscription.label  "Edit subscription">
+<!ENTITY context.editsubscription.label  "Edit rule group">
 <!ENTITY context.moveup.label            "Move rule up">
 <!ENTITY context.movedown.label          "Move rule down">
 <!ENTITY context.movegroupup.label       "Move group up">
@@ -109,11 +108,10 @@
 <!ENTITY apply.label                     "Apply">
 <!ENTITY apply.accesskey                 "P">
 
-<!ENTITY changeStatusClickBehaviour.label  "Click status icon behaviour">
-<!ENTITY changeToolbarClickBehaviour.label "Click toolbar icon behaviour">
-<!ENTITY changeClickBehaviour_context      "Context menu">
-<!ENTITY changeClickBehaviour_proxyMenu    "Proxy menu">
-<!ENTITY changeClickBehaviour_cycleProxy   "Proxy Cycle">
-<!ENTITY changeClickBehaviour_quickAdd     "Quick add filter">
-<!ENTITY changeClickBehaviour_preference   "Preference">
-<!ENTITY changeClickBehaviour_proxyable    "Proxyable items">
+<!ENTITY changeClickBehaviour.label      "When click on icon:">
+<!ENTITY changeClickBehaviour_context    "Context menu">
+<!ENTITY changeClickBehaviour_proxyMenu  "Proxy menu">
+<!ENTITY changeClickBehaviour_cycleProxy "Cycle default proxy">
+<!ENTITY changeClickBehaviour_proxyMode  "Cycle proxy mode">
+<!ENTITY changeClickBehaviour_preference "Preference">
+<!ENTITY changeClickBehaviour_proxyable  "Proxyable items">

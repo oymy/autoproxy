@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Wang Congming <lovelywcm@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2010-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -33,12 +33,11 @@ const pS = Cc['@mozilla.org/network/protocol-proxy-service;1'].getService(Ci.nsI
 var proxy =
 {
   server: null,
-  defaultProxy: null,
-  fallbackProxy: null,
-
-  validConfigs: null,
   getName: null,
+  defaultProxy: null,
+  validConfigs: null,
   mode: ['auto', 'global', 'disabled'],
+  direct: pS.newProxyInfo('direct', '', -1, 0, 0, null),
 
   init: function()
   {
@@ -53,54 +52,26 @@ var proxy =
                             proxy.configToObj(prefs.knownProxy);
 
     /**
-     * Refresh proxy name string array (getName) & available proxy servers
-     *
-     * server (array of nsIProxyInfo):
-     *   server[0]: direct
-     *   server[1-]: corresponding proxy in custom/known proxy list
+     * Refresh proxy name & available proxy servers
      *
      * newProxyInfo(type, host, port, socks_remote_dns, failoverTimeout, failoverProxy)
      */
-    proxy.getName = [ aup.getString('directConnect') ];
-    proxy.server = [ pS.newProxyInfo('direct', '', -1, 0, 0, null) ];
-    for each ( var conf in proxy.validConfigs) {
+    proxy.server = []; proxy.getName = [];
+    for each (var conf in proxy.validConfigs) {
       proxy.getName.push(conf.name);
       proxy.server.push(pS.newProxyInfo(conf.type, conf.host, conf.port, 1, 0, null));
     }
 
-    proxy.nameOfDefaultProxy = proxy.getName[prefs.defaultProxy];
+    // Refresh defaultProxy {nsIProxyInfo}
+    proxy.defaultProxy = proxy.server[prefs.defaultProxy] || proxy.server[0];
+    proxy.nameOfDefaultProxy = proxy.getName[prefs.defaultProxy] || proxy.getName[0];
 
-    /**
-     * Refresh defaultProxy (nsIProxyInfo)
-     *
-     * prefs.defaultProxy:
-     *   0: direct
-     *   1 - customProxy/knownProxy.length: corresponding proxy
-     *   other: invalid, take 1 as it's value(use the first proxy)
-     */
-    proxy.defaultProxy = proxy.server[prefs.defaultProxy] || proxy.server[1];
+    // Refresh fallbackProxy {nsIProxyInfo}
+    proxy.fallbackProxy = prefs.fallbackProxy == -1 ?
+           proxy.direct : proxy.server[prefs.fallbackProxy];
 
-    /**
-     * Refresh fallbackProxy (nsIProxyInfo)
-     *
-     * prefs.fallbackProxy:
-     *   -1: same as default proxy
-     *    0: direct
-     *   1 - customProxy/knownProxy.length: corresponding proxy
-     *   other: invalid, take 0 as it's value(direct connect)
-     */
-    if ( prefs.fallbackProxy == -1 ) proxy.fallbackProxy = proxy.defaultProxy;
-    else proxy.fallbackProxy = proxy.server[prefs.fallbackProxy] || proxy.server[0];
-
-    // Register/Unregister proxy filter & refresh shouldProxy() for specified mode
-    if ( prefs.proxyMode == 'disabled' ) pS.unregisterFilter(proxy);
-    else {
-      if ( prefs.proxyMode == 'global' ) policy.shouldProxy = function() { return true; };
-      else policy.shouldProxy = policy.autoMatching;
-
-      pS.unregisterFilter(proxy);
-      pS.registerFilter(proxy, 0);
-    }
+    pS.unregisterFilter(proxy);
+    pS.registerFilter(proxy, 0);
   },
 
   /**
@@ -138,7 +109,7 @@ var proxy =
   isProxyableScheme: function(location)
   {
     return ['http', 'https', 'ftp', 'gopher'].some(
-      function(scheme){return location.scheme==scheme} );
+      function(scheme){return location.scheme==scheme;});
   },
 
   /**
@@ -156,14 +127,41 @@ var proxy =
   //
   applyFilter: function(pS, uri, aProxy)
   {
-    if ( uri.schemeIs('feed') ) return this.server[0];
-    if ( policy.shouldProxy(uri) ) return this.defaultProxy;
-    return this.fallbackProxy;
+    if (prefs.proxyMode == 'disabled' || uri.schemeIs('feed'))
+      return this.direct;
+
+    var match = policy.autoMatching(uri);
+
+    if (this.isNoProxy(match)) return this.direct;
+    if (prefs.proxyMode == "auto")
+      return this.getGroupProxy(match) || this.fallbackProxy;
+
+    return this.defaultProxy;
+  },
+
+  // @todo: bug, whitelist in other group may overwrite "global no proxy" group
+  isNoProxy: function(match)
+  {
+    if (match instanceof WhitelistFilter)
+//      for each (var s in match.subscriptions)
+//        if (!s.disabled && s.url == "~wl~")
+          return true;
+
+    return false;
+  },
+
+  getGroupProxy: function(match)
+  {
+    if (!match || match instanceof WhitelistFilter) return null;
+    for each (var s in match.subscriptions)
+      if (!s.disabled)
+        return this.server[s.proxy] || this.defaultProxy;
   }
 };
 
 aup.proxy = proxy;
 
-// TODO: i18n
-// TODO: ";" & "$" is not allowed in proxy name
-// TODO: editProxyServer.js
+// @TODO: ";" & "$" is not allowed in proxy name
+// @TODO: review editProxyServer.js
+// @TODO: proxy name should be unique
+// @TODO: aup.getString('no proxy') && aup.getString('default proxy') are reserved

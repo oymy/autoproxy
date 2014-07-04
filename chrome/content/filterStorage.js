@@ -254,19 +254,19 @@ var filterStorage =
     {
       for each (let s in this.subscriptions)
       {
-        if (s instanceof SpecialSubscription && s.isFilterAllowed(filter))
+        if (s instanceof SpecialSubscription && !s.disabled)
         {
           if (s.filters.indexOf(filter) >= 0)
             return;
-
-          if (!subscription || s.priority > subscription.priority)
-            subscription = s;
+          else subscription = s;
         }
       }
     }
 
-    if (!subscription)
-      return;
+    if (!subscription) {
+      subscription = new aup.SpecialSubscription();
+      this.addSubscription(subscription);
+    }
 
     let insertIndex = -1;
     if (insertBefore)
@@ -411,17 +411,6 @@ var filterStorage =
 
     timeLine.log("done parsing file");
 
-    // Add missing special subscriptions if necessary
-    for each (let specialSubscription in ["~il~", "~wl~", "~fl~", "~eh~"])
-    {
-      if (!(specialSubscription in this.knownSubscriptions))
-      {
-        let subscription = Subscription.fromURL(specialSubscription);
-        if (subscription)
-          this.addSubscription(subscription, true);
-      }
-    }
-
     if (userFilters)
     {
       for each (let filter in userFilters)
@@ -460,7 +449,7 @@ var filterStorage =
 
       let val = line.value;
       if (wantObj === true && /^(\w+)=(.*)$/.test(val))
-        curObj[RegExp.$1] = RegExp.$2;
+        curObj[RegExp.$1] = (RegExp.$1 == "proxy") ? parseInt(RegExp.$2) : RegExp.$2;
       else if (/^\s*\[(.+)\]\s*$/.test(val))
       {
         let newSection = RegExp.$1.toLowerCase();
@@ -512,6 +501,7 @@ var filterStorage =
           case "subscription":
             wantObj = true;
             curObj = {};
+            curObj.title = "";
             break;
           case "subscription filters":
           case "subscription patterns":

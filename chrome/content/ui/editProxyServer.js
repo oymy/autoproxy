@@ -52,18 +52,18 @@ function createBlankRow(proxy)
   proxyType.setAttribute("orient", "horizontal");
 
   // proxy type nodes
-  var http = cE("radio");
-  var socks4 = cE("radio");
-  var socks = cE("radio");
-  http.setAttribute("class", "proxyHttp");
+  var http = cE("radio"), socks = cE("radio"), socks4 = cE("radio");
+  http  .setAttribute("class", "proxyHttp");
+  socks .setAttribute("class", "proxySocks5");
   socks4.setAttribute("class", "proxySocks4");
-  socks.setAttribute("class", "proxySocks5");
+  http  .setAttribute("selected", proxy && proxy.type == "http"  );
+  socks .setAttribute("selected", proxy && proxy.type == "socks" );
+  socks4.setAttribute("selected", proxy && proxy.type == "socks4");
 
   if (proxy) {
     proxyName.setAttribute("value", proxy.name);
     proxyHost.setAttribute("value", proxy.host);
     proxyPort.setAttribute("value", proxy.port);
-    eval( proxy.type + ".setAttribute('selected', true)" );
   }
 
   // insert type nodes to type
@@ -156,7 +156,7 @@ function reset2Default()
   init();
   window.sizeToContent();
 
-  defaultProxy = 0;
+  defaultProxy = 10;
 }
 
 function saveProxyServerSettings()
@@ -212,14 +212,14 @@ function saveProxyServerSettings()
                   return true;
               }
           });
-          if (!hasDefaultProxy) prefs.defaultProxy = 0;
+          if (!hasDefaultProxy) prefs.defaultProxy = 1;
       }
   }
   else {
     // all proxies removed, restore to default.
-    prefs.defaultProxy = "";
+    prefs.defaultProxy = 10;
   }
 
-  prefs.customProxy = pConfig;
+  prefs.customProxy = (pConfig == prefs.knownProxy ? '' : pConfig);
   prefs.save();
 }

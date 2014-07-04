@@ -33,6 +33,10 @@ var wndData = null;
 var cacheSession = null;
 var noFlash = false;
 
+// Matchers for disabled filters
+var disabledBlacklistMatcher = new aup.Matcher();
+var disabledWhitelistMatcher = new aup.Matcher();
+
 var aupHooks = null;
 
 function init() {
@@ -80,6 +84,11 @@ function init() {
   // Install item listener
   RequestList.addListener(handleItemChange);
 
+  // Initialize matchers for disabled filters
+  reloadDisabledFilters();
+  filterStorage.addFilterObserver(reloadDisabledFilters);
+  filterStorage.addSubscriptionObserver(reloadDisabledFilters);
+
   // Activate flasher
   list.addEventListener("select", onSelectionChange, false);
 
@@ -112,9 +121,31 @@ function cleanUp() {
 
   flasher.stop();
   RequestList.removeListener(handleItemChange);
+  filterStorage.removeFilterObserver(reloadDisabledFilters);
+  filterStorage.removeSubscriptionObserver(reloadDisabledFilters);
 
   aupHooks.getBrowser().removeEventListener("select", handleTabChange, false);
   mainWin.removeEventListener("unload", mainUnload, false);
+}
+
+/**
+ * Updates matchers for disabled filters (global disabledBlacklistMatcher and
+ * disabledWhitelistMatcher variables), called on each filter change.
+ */
+function reloadDisabledFilters()
+{
+  disabledBlacklistMatcher.clear();
+  disabledWhitelistMatcher.clear();
+
+  for each (let subscription in filterStorage.subscriptions)
+  {
+    if (subscription.disabled)
+      continue;
+
+    for each (let filter in subscription.filters)
+      if (filter instanceof aup.RegExpFilter && filter.disabled)
+        (filter instanceof aup.BlockingFilter ? disabledBlacklistMatcher : disabledWhitelistMatcher).add(filter);
+  }
 }
 
 // Called whenever list selection changes - triggers flasher
@@ -305,7 +336,7 @@ function fillInContext(/**Event*/ e)
   if (!item || ("tooltip" in item && !("filter" in item)))
     return false;
 
-  enableProxyOn(E('contextOpen'), item);
+  enableProxyOn(E('contextOpen'), aup.makeURL(item.location));
 
   E("contextCopyFilter").setAttribute("disabled", !allItems.some(function(item) {return "filter" in item && item.filter}));
 

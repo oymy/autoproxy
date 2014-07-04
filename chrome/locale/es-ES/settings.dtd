@@ -1,11 +1,13 @@
 <!ENTITY dialog.title "Preferencias de AutoProxy">
 <!ENTITY filters.label "Regla Proxy">
 <!ENTITY filters.accesskey "R">
-<!ENTITY add.label "Añadir regla">
+<!ENTITY add.label "Añadir regla de proxy">
 <!ENTITY add.accesskey "A">
-<!ENTITY addsubscription.label "Añadir subscripción de regla">
+<!ENTITY addRuleGroup.label "Añadir grupo de reglas">
+<!ENTITY addRuleGroup.accesskey "G">
+<!ENTITY addsubscription.label "Añadir suscripción de regla">
 <!ENTITY addsubscription.accesskey "S">
-<!ENTITY synchsubscriptions.label "Actualizar todas las subscripciones">
+<!ENTITY synchsubscriptions.label "Actualizar todas las suscripciones">
 <!ENTITY synchsubscriptions.accesskey "D">
 <!ENTITY import.label "Importar reglas">
 <!ENTITY import.accesskey "M">
@@ -19,7 +21,7 @@
 <!ENTITY proxies.accesskey "S">
 <!ENTITY editproxies.label "Editar servidor proxy">
 <!ENTITY editproxies.accesskey "E">
-<!ENTITY chooseproxies.label "Choose proxy server">
+<!ENTITY chooseproxies.label "Elegir servidor proxy">
 <!ENTITY chooseproxies.accesskey "C">
 <!ENTITY edit.label "Editar">
 <!ENTITY edit.accesskey "E">
@@ -51,7 +53,7 @@
 <!ENTITY mode.auto.accesskey "A">
 <!ENTITY mode.global.label "Modo global">
 <!ENTITY mode.global.accesskey "G">
-<!ENTITY mode.disabled.label "Desactivar AutoProxy">
+<!ENTITY mode.disabled.label "Desactivar Proxy">
 <!ENTITY mode.disabled.accesskey "D">
 <!ENTITY showintoolbar.label "Mostrar en la barra de tareas">
 <!ENTITY showintoolbar.accesskey "B">
@@ -61,13 +63,10 @@
 <!ENTITY help.accesskey "H">
 <!ENTITY gettingStarted.label "Comenzando">
 <!ENTITY gettingStarted.accesskey "s">
-<!ENTITY gettingStarted.url "http://autoproxy.org/en/getting_started">
 <!ENTITY faq.label "FAQ - Preguntas y Respuestas Frecuentes">
 <!ENTITY faq.accesskey "F">
-<!ENTITY faq.url "http://autoproxy.org/en/faq">
 <!ENTITY filterdoc.label "Escribiendo reglas en AutoProxy">
 <!ENTITY filterdoc.accesskey "R">
-<!ENTITY filterdoc.url "http://autoproxy.org/en/rules">
 <!ENTITY about.label "Acerca de AutoProxy">
 <!ENTITY about.accesskey "B">
 <!ENTITY description "Las siguientes reglas determinan que direcciones pasarán o no por un proxy:">
@@ -84,7 +83,7 @@
 <!ENTITY context.edit.label "Editar regla">
 <!ENTITY context.resethitcount.label "Reiniciar contador estadístico para la regla">
 <!ENTITY context.synchsubscription.label "Actualizar la subscripción ahora">
-<!ENTITY context.editsubscription.label "Editar subscripción">
+<!ENTITY context.editsubscription.label "Editar grupo de reglas">
 <!ENTITY context.moveup.label "Subir regla">
 <!ENTITY context.movedown.label "Bajar regla">
 <!ENTITY context.movegroupup.label "Subir grupo">
@@ -93,3 +92,10 @@
 <!ENTITY context.disable.label "Desactivar">
 <!ENTITY apply.label "Aplicar">
 <!ENTITY apply.accesskey "P">
+<!ENTITY changeClickBehaviour.label "When click on icon:">
+<!ENTITY changeClickBehaviour_context "Context menu">
+<!ENTITY changeClickBehaviour_proxyMenu "Proxy menu">
+<!ENTITY changeClickBehaviour_cycleProxy "Cycle default proxy">
+<!ENTITY changeClickBehaviour_proxyMode "Cycle proxy mode">
+<!ENTITY changeClickBehaviour_preference "Preference">
+<!ENTITY changeClickBehaviour_proxyable "Proxyable items">

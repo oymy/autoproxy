@@ -274,7 +274,7 @@ const aup =
    */
   getInstalledVersion: function() /**String*/
   {
-    return "{{VERSION}}";
+    return "0.4b2.2013051811";
   },
 
   /**
